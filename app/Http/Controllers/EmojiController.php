@@ -31,4 +31,10 @@ class EmojiController extends Controller
             return response()->json(['message' => 'Emoji created successfully', 'data' => $emoji], 201);
 
     }
+    public function getEmojisByBranch($branch_id)
+{
+    $emojis = Emoji::where('branch_id', $branch_id)->get();
+
+    return response()->json(['data' => $emojis], 200);
+}
 }
