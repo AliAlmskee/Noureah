@@ -22,6 +22,8 @@ return new class extends Migration
             $table->boolean('is_special')->default(false);
             $table->integer('mark')->nullable();
             $table->json('pages')->nullable();
+            $table->unsignedBigInteger('emoji_id')->nullable();
+            $table->foreign('emoji_id')->references('id')->on('emoji')->onDelete('set null');
             $table->date('date')->nullable();
             $table->timestamps();
         });

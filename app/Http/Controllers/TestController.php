@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Test;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Controllers\StudyProgressController ;
@@ -27,14 +28,21 @@ class TestController extends Controller
             'is_special' => 'boolean',
             'mark' => 'integer',
             'pages' => 'array',
+            'emoji_id' =>'exists:emoji,id'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
         $data = $validator->validated();
+        $student =Student::find( $request->student_id);
+        if($student->folder_id !=  $request->folder_id)
+        {
+            return response()->json('folder_id not match the currecnt one ');
 
+        }
         $data['no_pages'] = count($data['pages']);
+        $data['emoji_id'] = $request->emoji_id ;
     //    $data['date'] = Carbon::now('Asia/Damascus')->format('y/m/d');
 
         if ($data['no_pages'] < 5) {

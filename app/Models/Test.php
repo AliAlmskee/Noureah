@@ -21,6 +21,7 @@ class Test extends Model
         'is_special',
         'mark',
         'pages',
+        'emoji_id',
         'date',
     ];
 

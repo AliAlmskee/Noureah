@@ -15,9 +15,9 @@ class Student extends Model
         'photo',
         'branch_id',
         'key',
+        'previous_consistency',
         'current_consistency',
         'max_consistency',
-        'emoji',
         'current_folder_id',
     ];
 

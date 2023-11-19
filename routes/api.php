@@ -70,3 +70,22 @@ Route::post('/statistic/sort-by-approved-exams', 'App\Http\Controllers\Statistic
 
 Route::post('/change-student-photo/{id}','App\Http\Controllers\StudentController@changephoto');
 Route::put('/exams/{exam}/approve', 'App\Http\Controllers\ExamController@approveExam');
+
+
+
+Route::get('emojis/{branch_id}', 'App\Http\Controllers\EmojiController@getEmojisByBranch');
+Route::delete('emojis/{id}', 'App\Http\Controllers\EmojiController@delete');
+Route::post('imojis/student', 'App\Http\Controllers\EmojiController@emojis_student');
+
+
+Route::get('emojis_photo/{id}', 'App\Http\Controllers\EmojiController@getImage');
+
+
+
+
+Route::post('/calculatePercentage',[StudyProgressController::class,'calculatePercentage']);
+
+
+
+
+Route::post('/changetheBook',[StudyProgressController::class,'changetheBook']);

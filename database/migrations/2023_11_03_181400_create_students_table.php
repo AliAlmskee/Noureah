@@ -15,9 +15,9 @@ class CreateStudentsTable extends Migration
             $table->string('photo')->nullable();
             $table->foreignId('branch_id')->constrained();
             $table->string('key')->unique();
+            $table->integer('previous_consistency')->default(0);
             $table->integer('current_consistency')->default(0);
             $table->integer('max_consistency')->default(0);
-            $table->string('emoji')->nullable();
             $table->foreignId('current_folder_id')->nullable()->constrained('folders')->onDelete('set null')->default(null);
             $table->timestamps();
         });

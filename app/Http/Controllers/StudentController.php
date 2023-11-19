@@ -110,12 +110,7 @@ class StudentController extends Controller
         return response()->json(['message' => 'Photo changed successfully', 'data' => $student], 200);
     }
 
-    public function changeFolder(Request $request, $id)
-    {
-        $student = Student::findOrFail($id);
 
-
-    }
 
 
 
@@ -169,7 +164,7 @@ class StudentController extends Controller
                 ->first();
         }
 
-        $bookStudent->percentage_finished = 1;
+        $bookStudent->percentage_finished = 100;
 
 
         $bookStudent['assigned_finished'] = str_repeat('1', strlen($bookStudent['assigned_finished']));
