@@ -1,15 +1,30 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Branch;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 
 class TeacherController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $teachers = Teacher::all();
+        $id = $request->query('id');
+
+        if ($id) {
+            $teachers = Teacher::where('branch_id', $id)->get();
+        } else {
+            $teachers = Teacher::all();
+        }
+
+        foreach ($teachers as $teacher) {
+            $teacher->branch_name = Branch::find($teacher->branch_id)->name;
+            unset($teacher->branch_id);
+            unset($teacher->created_at);
+            unset($teacher->updated_at);
+
+        }
+
         return response()->json($teachers);
     }
 

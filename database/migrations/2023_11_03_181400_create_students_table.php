@@ -15,6 +15,7 @@ class CreateStudentsTable extends Migration
             $table->string('photo')->nullable();
             $table->foreignId('branch_id')->constrained();
             $table->string('key')->unique();
+            $table->integer('days_inrow')->default(0);
             $table->integer('previous_consistency')->default(0);
             $table->integer('current_consistency')->default(0);
             $table->integer('max_consistency')->default(0);

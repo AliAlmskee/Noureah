@@ -3,17 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Models\Exam;
+use App\Models\Student;
+use App\Models\Book;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Controllers\BookStudentController;
 class ExamController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+
+    public function index(Request $request)
     {
-        $exams = Exam::all();
+
+        $status = $request->query('status');;
+        $exams = Exam::where('status', $status)->get();
+        foreach ($exams as $exam) {
+            $exam->student_name = Student::find($exam->student_id)->name;
+            $exam->book_name = Book::find($exam->book_id)->name;
+            $exam->teacher_name = Teacher::find($exam->teacher_id)->name;
+
+            unset($exam->student_id);
+            unset($exam->teacher_id);
+            unset($exam->book_id);
+            unset($exam->created_at);
+            unset($exam->updated_at);
+
+        }
+
         return response()->json($exams);
     }
 
@@ -24,10 +41,15 @@ class ExamController extends Controller
             'book_id' => 'required|exists:books,id',
             'teacher_id' => 'required|exists:teachers,id',
             'mark' => 'integer',
-            'number' => 'integer',
+            'number' => 'required|integer',
+            'date' => 'nullable|date_format:Y/m/d',
         ]);
-        $data['date'] = Carbon::now('Asia/Damascus')->format('y/m/d');
-        $data['status'] ="pending" ;
+        if($request->number> Book::find($request->book_id )->no_exams ||$request->book_id ==1 )
+        {
+            return response()->json("invalid number of exam");
+
+        }
+        $data['status'] ="Pending" ;
         $exam = Exam::create($data);
 
         return response()->json($exam, 201);
@@ -41,7 +63,6 @@ class ExamController extends Controller
             'teacher_id' => 'exists:teachers,id',
             'mark' => 'integer',
             'date' => 'date',
-            'status' => 'nullable|string',
             'admin_id' => 'nullable|exists:admins,id',
         ]);
 
@@ -59,19 +80,21 @@ class ExamController extends Controller
 
         return response()->json(null, 204);
     }
-    public function approveExam(Request $request, Exam $exam)
+    public function approveExam(Request $request)
     {
         $data = $request->validate([
+            'exam_id' => 'required|exists:exams,id',
             'admin_id' => 'required|exists:admins,id',
         ]);
 
-        $exam->status = 'approved';
+        $exam = Exam::findOrFail($data['exam_id']);
+        $exam->status = 'Approved';
         $exam->admin_id = $data['admin_id'];
         $exam->save();
 
         $bookStudentRequest = new Request([
             'student_id' => $exam->student_id,
-            'book_id' => $exam->book_id,
+            'book_id' => $exam->version_id,
             'number' => $exam->number,
         ]);
 
@@ -79,11 +102,5 @@ class ExamController extends Controller
         $bookStudentController->update($bookStudentRequest);
 
         return response()->json($exam);
-    }
-
-    public function getAllPendingExams(Request $request)
-    {
-        $exams = Exam::where('status', 'pending')->get();
-        return response()->json($exams, 200);
     }
 }

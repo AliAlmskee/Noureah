@@ -19,6 +19,7 @@ class Student extends Model
         'current_consistency',
         'max_consistency',
         'current_folder_id',
+        'days_inrow',
     ];
 
     public function branch()

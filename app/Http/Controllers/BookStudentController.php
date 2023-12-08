@@ -7,13 +7,26 @@ use App\Models\Book;
 use App\Models\Version;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Folder;
+use App\Models\Student;
 
 class BookStudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $bookStudents = BookStudent::all();
-        return response()->json($bookStudents);
+        $student_id = $request->query('student_id');
+
+        $student = Student::find($student_id);
+        if(!$student)
+        {        return response()->json('error');
+        }
+        $folder = Folder::find($student->current_folder_id);
+
+
+        $bookStudents = BookStudent::where('student_id',$student_id)->where('version_id',$folder->version_id)->first();
+
+        return response()->json(['finished' => $bookStudents->assigned_finished]);
+
     }
 
 
@@ -65,5 +78,56 @@ class BookStudentController extends Controller
         $bookStudent->delete();
 
         return response()->json(null, 204);
+    }
+
+
+    public function bookStatus($student_id)
+    {
+        $booksStudent = BookStudent::where('student_id', $student_id)->get();
+        $finished = [];
+        $curr = null;
+        $unfinished = range(1, 8);
+
+        foreach ($booksStudent as $bookStudent) {
+            if ($bookStudent->percentage_finished == 100) {
+                $book_id = Version::find($bookStudent->version_id)->book_id;
+                $finished[] = ['book_id' => $book_id, 'version_id' => $bookStudent->version_id];
+                $key = array_search($book_id, $unfinished);
+                if ($key !== false) {
+                    unset($unfinished[$key]);
+                }
+            } else {
+                $curr = ['book_id' => Version::find($bookStudent->version_id)->book_id,
+                'version_id' => $bookStudent->version_id,
+                'curr_progress'=>$bookStudent->percentage_finished];
+            }
+        }
+
+        return ['finished' => $finished, 'curr' => $curr, 'unfinished' => array_values($unfinished)];
+    }
+
+
+
+    public function versionStatus($student_id)
+    {
+        $booksStudent = BookStudent::where('student_id', $student_id)->get();
+        $finished = [];
+        $curr = null;
+        $unfinished = range(1, 8);
+
+        foreach ($booksStudent as $bookStudent) {
+            if ($bookStudent->percentage_finished == 100) {
+                $finished[] =  Version::find($bookStudent->version_id)->id;
+                $key = array_search( Version::find($bookStudent->version_id)->id, $unfinished);
+                if ($key !== false) {
+                    unset($unfinished[$key]);
+                }
+            } else {
+
+                $curr = Version::find($bookStudent->version_id)->id;
+            }
+        }
+
+        return ['finished' => $finished, 'curr' => $curr, 'unfinished' => array_values($unfinished)];
     }
 }

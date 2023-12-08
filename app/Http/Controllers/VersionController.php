@@ -10,9 +10,9 @@ class VersionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index($book_id)
     {
-        $versions = Version::all();
+        $versions = Version::where('book_id', $book_id)->get();
         return response()->json($versions);
     }
 

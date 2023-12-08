@@ -23,6 +23,7 @@ class Test extends Model
         'pages',
         'emoji_id',
         'date',
+        'color',
     ];
 
     protected $casts = [

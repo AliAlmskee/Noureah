@@ -22,7 +22,7 @@ class CreateExamsTable extends Migration
             $table->integer('number');
             $table->date('date')->nullable();
             $table->string('status')->nullable();
-            $table->foreignId('admin_id')->nullable()->constrained('admins')->onDelete('set null');
+            $table->foreignId('admin_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
     }

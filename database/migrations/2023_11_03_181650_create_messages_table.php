@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('test_id')->constrained('tests')->onDelete('cascade');
-            $table->foreignId('admin_id')->constrained('admins')->onDelete('cascade')->nullable();
+            $table->foreignId('admin_id')->constrained('users')->nullable()->onDelete('cascade');
             $table->text('thanks_message');
             $table->timestamps();
         });

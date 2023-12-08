@@ -15,7 +15,7 @@ class TeacherSeeder extends Seeder
     {
         $teachers = [
             [
-                'name' => 'أ. مؤمنة بواب',
+                'name' => 'أ. مؤمنة البواب',
                 'branch_id' => 1,
             ],
             [
@@ -24,11 +24,11 @@ class TeacherSeeder extends Seeder
             ],
             [
                 'name' => 'أ. غفران مزيان',
-                'branch_id' => 1,
+                'branch_id' => 2,
             ],
             [
                 'name' => 'أ. ايمان السمان',
-                'branch_id' => 1,
+                'branch_id' => 2,
             ],
         ];
         foreach ($teachers as $teacherData) {

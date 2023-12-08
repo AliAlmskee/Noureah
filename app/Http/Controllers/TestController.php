@@ -4,21 +4,49 @@ namespace App\Http\Controllers;
 
 use App\Models\Test;
 use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\Folder;
+use App\Models\emoji;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use App\Http\Controllers\StudyProgressController ;
 use Illuminate\Support\Facades\Validator;
+
 class TestController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tests = Test::all();
-        return response()->json($tests);
+        $id = $request->query('id');
+        $perPage = 15;
+        $page = $request->query('page', 1);
+
+        if ($id) {
+            $tests = Test::where('branch_id', $id)->paginate($perPage);
+        } else {
+            $tests = Test::paginate($perPage);
+        }
+
+        foreach ($tests as $test) {
+            $test->teacher_name = Teacher::find($test->teacher_id)->name;
+            $test->student_name = Student::find($test->student_id)->name;
+            $test->folder_name = Folder::find($test->folder_id)->name;
+            if ($test->emoji_id) {
+                $test->emoji = Emoji::find($test->emoji_id)->emoji;
+                unset($test->emoji_id);
+            }
+            unset($test->teacher_id);
+            unset($test->student_id);
+            unset($test->folder_id);
+            unset($test->created_at);
+            unset($test->updated_at);
+
+        }
+        $testsData = $tests->items();
+
+        return response()->json($testsData);
     }
 
     public function store(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'teacher_id' => 'required|exists:teachers,id',
             'student_id' => 'required|exists:students,id',
@@ -28,7 +56,8 @@ class TestController extends Controller
             'is_special' => 'boolean',
             'mark' => 'integer',
             'pages' => 'array',
-            'emoji_id' =>'exists:emoji,id'
+            'emoji_id' =>'exists:emoji,id',
+            'date' => 'nullable|date_format:Y/m/d',
         ]);
 
         if ($validator->fails()) {
@@ -36,20 +65,20 @@ class TestController extends Controller
         }
         $data = $validator->validated();
         $student =Student::find( $request->student_id);
-        if($student->folder_id !=  $request->folder_id)
+        if($student->current_folder_id !=  $request->folder_id)
         {
             return response()->json('folder_id not match the currecnt one ');
 
         }
+
         $data['no_pages'] = count($data['pages']);
         $data['emoji_id'] = $request->emoji_id ;
-    //    $data['date'] = Carbon::now('Asia/Damascus')->format('y/m/d');
-
+        $data['date'] = $request->date;
+        $data['color'] = $student->color;
         if ($data['no_pages'] < 5) {
             return response()->json(['error' => 'The pages must be at least 5.'], 422);
         }
 
-        $test = Test::create($data);
 
         $studyProgressController = new StudyProgressController();
         $studyProgressRequest = new Request([
@@ -59,11 +88,18 @@ class TestController extends Controller
         ]);
 
         $result = $studyProgressController->update($studyProgressRequest);
-        if ($result->getData() === "page is not in this folder ") {
-            return "page is not in this folder";
+        if ($result->getData() === "page is not in this folder") {
+            return response()->json(['message' => 'page is not in this folder']);
         }
+        if ($result->getData() === "already done!") {
+            return response()->json(['message' => 'already done!']);
+        }
+        $test = Test::create($data);
+
+      //  calcConsistnsy($student->branch_id);
         return response()->json($test, 201);
     }
+
 
 
 
@@ -94,4 +130,33 @@ class TestController extends Controller
 
         return response()->json(null, 204);
     }
+
+    public function testforstudent($id, $folder_id)
+    {
+        $tests = Test::where('student_id', $id)->where('folder_id', $folder_id)->get();
+
+        foreach ($tests as $test) {
+            $test->teacher_name = Teacher::find($test->teacher_id)->name;
+            $test->folder_name = Folder::find($test->folder_id)->name;
+
+            if ($test->emoji_id) {
+                $test->emojiUrl = Emoji::find($test->emoji_id)->emoji;
+                unset($test->emoji_id);
+            }
+            unset($test->emoji_id);
+            unset($test->teacher_id);
+            unset($test->student_id);
+            unset($test->folder_id);
+            unset($test->created_at);
+            unset($test->updated_at);
+        }
+
+
+        return response()->json($tests);
+    }
+
+
+
+
+
 }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('branch_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('admin_id')->references('id')->on('admins');
+            $table->foreign('admin_id')->references('id')->on('users');
             $table->foreign('branch_id')->references('id')->on('branches');
         });
     }

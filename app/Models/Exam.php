@@ -37,6 +37,6 @@ class Exam extends Model
 
     public function admin()
     {
-        return $this->belongsTo(Admin::class);
+        return $this->belongsTo(User::class, 'admin_id');
     }
 }

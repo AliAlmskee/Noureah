@@ -10,9 +10,9 @@ class FolderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index($version_id)
     {
-        $folders = Folder::all();
+        $folders = Folder::where('version_id', $version_id)->get();
         return response()->json($folders);
     }
 

@@ -7,9 +7,99 @@ use App\Models\Test;
 use App\Models\Exam;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\Auth;
 class StatisticsController extends Controller
 {
+
+
+    public function n2(Request $request)
+    {
+        $startDate = $request->input('startDate');
+        $endDate = $request->input('endDate');
+
+            $startDate = Carbon::createFromFormat('Y-m-d', $startDate);
+            $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
+
+            $id = $request->id;
+            $controller = new StudentController();
+
+            $request = Request::create('/students', 'GET', ['id' => $id]);
+            $response = $controller->index($request);
+            $students = $response->original;
+
+        foreach ($students as $student) {
+            unset($student->photo);
+            unset($student->previous_consistency);
+            unset($student->max_consistency);
+
+            $tests = Test::where('date', '>=', $startDate)
+                ->where('date', '<=', $endDate)
+                ->where('student_id', $student->id)
+                ->get();
+
+            $total_pages = 0;
+            $total_specials = 0;
+
+            foreach ($tests as $test) {
+                $total_pages += $test->no_pages;
+                if ($test->is_special) {
+                    $total_specials++;
+                }
+            }
+
+            $student->total_pages = $total_pages;
+            $student->total_specials = $total_specials;
+
+            $exams = Exam::where('date', '>=', $startDate)
+                ->where('date', '<=', $endDate)
+                ->where('student_id', $student->id)
+                ->get();
+
+            $total_exams = 0;
+
+            foreach ($exams as $exam) {
+                if ($exam->status === 'Approved') {
+                    $total_exams++;
+                }
+            }
+
+            $student->total_exams = $total_exams;
+        }
+
+        return response()->json($students);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function sortallStudentsByPages(Request $request)
     {
@@ -41,80 +131,6 @@ class StatisticsController extends Controller
 
         return response()->json(['students' => $students]);
     }
-
-
-
-    public function sortallStudentsBySpecialTests(Request $request)
-    {
-        $startDateTime = $request->input('startDateTime');
-        $endDateTime = $request->input('endDateTime');
-
-        $startDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $startDateTime);
-        $endDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $endDateTime);
-        if (is_null($startDateTime) || is_null($endDateTime)) {
-            return response()->json(['error' => 'Start and end date/time inputs are required.']);
-        }
-
-        $bookId = $request->input('book_id');
-        $branchId = $request->input('branch_id');
-
-        $query = Test::select('student_id', DB::raw('COUNT(*) as special_test_count'))
-        ->where('is_special', true)
-        ->whereBetween('tests.created_at', [$startDateTime, $endDateTime]);
-
-        if (!is_null($bookId)) {
-            $query->where('book_id', $bookId);
-        }
-        if (!is_null($branchId)) {
-            $query->join('students', 'tests.student_id', '=', 'students.id')
-                ->where('students.branch_id', $branchId);
-        }
-        $students = $query->groupBy('student_id')
-            ->orderBy('special_test_count', 'desc')
-            ->get();
-
-        return response()->json(['students' => $students]);
-    }
-
-
-    public function sortallStudentsByApprovedExams(Request $request)
-    {
-        $startDateTime = $request->input('startDateTime');
-        $endDateTime = $request->input('endDateTime');
-
-        $startDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $startDateTime);
-        $endDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $endDateTime);
-
-        if (is_null($startDateTime) || is_null($endDateTime)) {
-            return response()->json(['error' => 'Start and end date/time inputs are required.']);
-        }
-
-        $bookId = $request->input('book_id');
-        $branchId = $request->input('branch_id');
-
-        $query = Exam::select('student_id', DB::raw('COUNT(*) as approved_exam_count'))
-            ->where('status', 'approved')
-            ->whereBetween('exams.created_at', [$startDateTime, $endDateTime]);
-
-        if (!is_null($bookId)) {
-            $query->where('book_id', $bookId);
-        }
-        if (!is_null($branchId)) {
-            $query->join('students', 'exams.student_id', '=', 'students.id')
-                ->where('students.branch_id', $branchId);
-        }
-
-        $students = $query->groupBy('student_id')
-            ->orderBy('approved_exam_count', 'desc')
-            ->get();
-
-        return response()->json(['students' => $students]);
-    }
-
-
-
-
-
 
 
 }
