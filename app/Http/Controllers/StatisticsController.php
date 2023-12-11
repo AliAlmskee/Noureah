@@ -17,20 +17,25 @@ class StatisticsController extends Controller
         $startDate = $request->input('startDate');
         $endDate = $request->input('endDate');
 
+        try {
             $startDate = Carbon::createFromFormat('Y-m-d', $startDate);
             $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Invalid date format'], 400);
+        }
 
-            $id = $request->id;
-            $controller = new StudentController();
+        $id = $request->input('id');
+        $controller = new StudentController();
 
-            $request = Request::create('/students', 'GET', ['id' => $id]);
-            $response = $controller->index($request);
-            $students = $response->original;
+        $request = Request::create('/students', 'GET', ['id' => $id]);
+        $response = $controller->index($request);
+        $students = $response->getData();
 
         foreach ($students as $student) {
             unset($student->photo);
             unset($student->previous_consistency);
             unset($student->max_consistency);
+            unset($student->current_consistency);
 
             $tests = Test::where('date', '>=', $startDate)
                 ->where('date', '<=', $endDate)

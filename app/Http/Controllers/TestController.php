@@ -20,7 +20,9 @@ class TestController extends Controller
         $page = $request->query('page', 1);
 
         if ($id) {
-            $tests = Test::where('branch_id', $id)->paginate($perPage);
+            $tests = Test::whereHas('student', function ($query) use ($id) {
+                $query->where('branch_id', $id);
+            })->paginate($perPage);
         } else {
             $tests = Test::paginate($perPage);
         }
@@ -56,8 +58,9 @@ class TestController extends Controller
             'is_special' => 'boolean',
             'mark' => 'integer',
             'pages' => 'array',
-            'emoji_id' =>'exists:emoji,id',
-            'date' => 'nullable|date_format:Y/m/d',
+            'emoji_id' =>'nullable|exists:emoji,id',
+            'date' => 'nullable|date_format:Y-m-d',
+            'massage' =>'nullable|string' ,
         ]);
 
         if ($validator->fails()) {
@@ -72,7 +75,8 @@ class TestController extends Controller
         }
 
         $data['no_pages'] = count($data['pages']);
-        $data['emoji_id'] = $request->emoji_id ;
+        if($request->emoji_id){
+        $data['emoji_id'] = $request->emoji_id ;}
         $data['date'] = $request->date;
         $data['color'] = $student->color;
         if ($data['no_pages'] < 5) {
@@ -88,14 +92,25 @@ class TestController extends Controller
         ]);
 
         $result = $studyProgressController->update($studyProgressRequest);
-        if ($result->getData() === "page is not in this folder") {
+        if ($result->getData() === "page is not in this folder ") {
             return response()->json(['message' => 'page is not in this folder']);
         }
         if ($result->getData() === "already done!") {
             return response()->json(['message' => 'already done!']);
         }
         $test = Test::create($data);
+        if ($request->massage )
+        {
+            $massagecontroller = new MessageController();
 
+            $request = new Request([
+                'test_id' =>  $test->id,
+                'thanks_message' => $request->massage ,
+            ]);
+
+            $response = $massagecontroller->store($request);
+
+        }
       //  calcConsistnsy($student->branch_id);
         return response()->json($test, 201);
     }

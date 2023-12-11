@@ -41,7 +41,6 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     });
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::get('/getid', [AuthController::class, 'getAuthenticatedUserId']);
-    Route::apiResource('tests', TestController::class);
     Route::post('/finished-book', [StudentController::class, 'addFinishedBook']);
     Route::post('/finished-folder', [StudentController::class, 'addFinishedFolder']);
     Route::post('/addFormerStudent', [StudentController::class, 'addFormerStudent']);
@@ -51,7 +50,6 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::apiResource('versions', VersionController::class);
     Route::apiResource('folders', FolderController::class);
     Route::apiResource('messages', MessageController::class);
-    Route::apiResource('exams', ExamController::class);
     Route::apiResource('students', StudentController::class);
 
     Route::post('/approveExam',[ExamController::class,'approveExam']);
@@ -65,6 +63,12 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
 
 });
+Route::apiResource('tests', TestController::class);
+Route::apiResource('exams', ExamController::class);
+
+    Route::get('emojis/{branch_id}', 'App\Http\Controllers\EmojiController@getEmojisByBranch');
+    Route::get('emojis_photo/{id}', 'App\Http\Controllers\EmojiController@getImage');
+
 Route::post('/finished-pages', [StudyProgressController::class, 'finishedPages']);
 Route::get('/version_folders/{id}', [FolderController::class, 'index']);
 
@@ -73,6 +77,8 @@ Route::get('/bookStatus/{id}',[BookStudentController::class,'bookStatus']);
 Route::get('/student_search',[StudentController::class,'search']);
 Route::get('/profile',[StudentController::class,'profile']);
 Route::put('/students/{id}',[StudentController::class,'update']);
+Route::get('/students',[StudentController::class,'index']);
+Route::get('/student_image/{imageURL}',[StudentController::class,'student_image']);
 
 
 Route::apiResource('study-progresses', StudyProgressController::class);

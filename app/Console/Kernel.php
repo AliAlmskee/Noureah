@@ -27,7 +27,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('calc_consistency')
-        ->dailyAt('16:11')
+        ->dailyAt('17:15')
         ->timezone('Asia/Riyadh'); }
 
     /**

@@ -9,6 +9,9 @@ use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Controllers\BookStudentController;
+use App\Models\Folder;
+use App\Models\Version;
+
 class ExamController extends Controller
 {
 
@@ -38,13 +41,15 @@ class ExamController extends Controller
     {
         $data = $request->validate([
             'student_id' => 'required|exists:students,id',
-            'book_id' => 'required|exists:books,id',
             'teacher_id' => 'required|exists:teachers,id',
             'mark' => 'integer',
             'number' => 'required|integer',
-            'date' => 'nullable|date_format:Y/m/d',
+            'date' => 'nullable|date_format:Y-m-d',
         ]);
-        if($request->number> Book::find($request->book_id )->no_exams ||$request->book_id ==1 )
+        $student = Student::find($request->student_id);
+            $folder = Folder::find($student->current_folder_id);
+            $version = Version::find($folder->version_id);
+        if($request->number> Book::find( $version->book_id )->no_exams || $version->book_id ==1 )
         {
             return response()->json("invalid number of exam");
 
@@ -103,4 +108,5 @@ class ExamController extends Controller
 
         return response()->json($exam);
     }
+
 }

@@ -23,54 +23,57 @@ class StudentController extends Controller
 {
 
     //admin id
-    public function index(Request $request)
-    {
-        $id = $request->query('id');
-        $perPage = 2;
-        $currentPage = $request->query('page', 1);
-        $book_id = $request->query('book_id');
+            public function index(Request $request)
+        {
+            $id = $request->query('id');
+            $perPage = 15;
+            $currentPage = $request->query('page', 1);
+            $book_id = $request->query('book_id');
 
-        if ($id) {
-            $students = Student::where('branch_id', $id)->get();
-        } else {
-            $students = Student::all();
-        }
-
-        foreach ($students as $key => $student) {
-            $folder = Folder::find($student->current_folder_id);
-            $version = Version::find($folder->version_id);
-            $book = Book::find($version->book_id);
-
-            if ($book_id && $book_id != $book->id) {
-                unset($students[$key]);
-                continue;
+            if ($id) {
+                $students = Student::where('branch_id', $id)->get();
+            } else {
+                $students = Student::all();
             }
 
-            $student->branch_name = Branch::find($student->branch_id)->name;
-            $foldername = $folder->name;
-            $versionname = $version->name;
-            $bookname = $book->name;
+            $modifiedStudents = [];
 
-            unset($student->created_at);
-            unset($student->updated_at);
-            unset($student->days_inrow);
-            unset($student->branch_id);
+            foreach ($students as $student) {
+                $folder = Folder::find($student->current_folder_id);
+                $version = Version::find($folder->version_id);
+                $book = Book::find($version->book_id);
 
-            $student->folder_name = $foldername;
-            $student->version_name = $versionname;
-            $student->book_name = $bookname;
-        }
+                if ($book_id && $book_id != $book->id) {
+                    continue;
+                }
 
-        $pagedStudents = new LengthAwarePaginator(
-            $students->forPage($currentPage, $perPage),
-            $students->count(),
-            $perPage,
-            $currentPage,
-        );
+                $student->branch_name = Branch::find($student->branch_id)->name;
+                $foldername = $folder->name;
+                $versionname = $version->name;
+                $bookname = $book->name;
 
-          $studentsData = $pagedStudents->items();
+                unset($student->created_at);
+                unset($student->updated_at);
+                unset($student->days_inrow);
+                unset($student->branch_id);
+
+                $student->folder_name = $foldername;
+                $student->version_name = $versionname;
+                $student->book_name = $bookname;
+
+                $modifiedStudents[] = $student;
+            }
+
+            $pagedStudents = new LengthAwarePaginator(
+                collect($modifiedStudents)->forPage($currentPage, $perPage),
+                count($modifiedStudents),
+                $perPage,
+                $currentPage,
+            );
+
+            $studentsData = $pagedStudents->items();
             return response()->json($studentsData);
-    }
+        }
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -89,7 +92,7 @@ class StudentController extends Controller
         $studentData['branch_id'] =$admin->branch_id;}
         else
         {
-            if (!$request->has('branch_id') || !in_array($request->branch_id, [1, 2, 3])) {
+            if (!$request->has('branch_id') || !in_array($request->branch_id, [1, 2, 3,4])) {
                 return response()->json(['error' => 'required coorect branch_id'], 400);
             }
             $studentData['branch_id']=$request->branch_id ;
@@ -184,6 +187,19 @@ class StudentController extends Controller
         return response()->json(['message' => 'Photo changed successfully', 'data' => $newImage], 200);
     }
 
+    public function student_image($imageURL)
+    {
+            $imagePath = public_path('profile_images/' . $imageURL);
+
+            if (file_exists($imagePath)) {
+                return response()->file($imagePath);
+            }
+
+            return response()->json(['error' => 'photo not found'], 404);
+
+
+    }
+
     public function addFormerStudent(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -203,7 +219,7 @@ class StudentController extends Controller
          }
         else
         {
-            if (!$request->has('branch_id') || !in_array($request->branch_id, [1, 2, 3])) {
+            if (!$request->has('branch_id') || !in_array($request->branch_id, [1, 2, 3,4])) {
                 return response()->json(['error' => 'required corect branch_id'], 400);
             }
             $studentData['branch_id']=$request->branch_id ;
@@ -246,6 +262,11 @@ class StudentController extends Controller
                 $this->addFinishedFolder($request2);
             }
         }
+        $newRequest = new Request([
+            'student_id' =>$student->id,
+            'folderid' => $request->folder_id,
+        ]);
+        $studyProgressController->calculatePercentage($newRequest);
         return response()->json($student, 201);
     }
 
@@ -532,7 +553,7 @@ class StudentController extends Controller
                             $numberOfPages += $test->no_pages;
                         }
 
-                        $topStudents[$numberOfPages] = [
+                        $topStudents[$otherStudent->id] = [
                             'id' => $otherStudent->id,
                             'photo' => $otherStudent->photo,
                             'name' => $otherStudent->name,
@@ -541,9 +562,11 @@ class StudentController extends Controller
                     }
                 }
 
-              //  arsort($topStudents);
-              ksort($topStudents);
-              krsort($topStudents);
+                usort($topStudents, function ($a, $b) {
+                    return $b['numberOfPages'] - $a['numberOfPages'];
+                });
+            //  ksort($topStudents);
+            //  krsort($topStudents);
 
                 $current_student_rank = 1;
                 $current_numberOfPages = 0;
@@ -555,6 +578,7 @@ class StudentController extends Controller
                      }
                       $current_student_rank++;
                 }
+                //return response()->json($topStudents);
 
                 $topStudents = array_slice($topStudents, 0, 3, true);
 

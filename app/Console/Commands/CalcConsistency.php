@@ -25,13 +25,22 @@ class CalcConsistency extends Command
      * Execute the console command.
      */
 
+
+//********************************************************************************************
+    //  protected function schedule(Schedule $schedule)
+    //  {
+    //      $schedule->command('calc_consistency')
+    //      ->dailyAt('17:15')
+    //      ->timezone('Asia/Riyadh'); }
+//****************************************************************************************** */
      public function handle()
      {
          $students = Student::all();
 
          foreach ($students as $student) {
              $tests = Test::where('student_id', $student->id)
-                 ->whereDate('created_at', now()->toDateString())
+                 ->whereDate('date', now()->toDateString())
+                // ->whereTime('date', '=', now()->format('H:i:s'))
                  ->get();
 
                  if ($tests->isNotEmpty()) {
@@ -49,7 +58,9 @@ class CalcConsistency extends Command
                  $current_numberofpages += $c;
 
                  $student->previous_consistency = $student->current_consistency;
-                 $student->current_consistency = $current_numberofpages / $student->days_inrow;
+           //       $student->current_consistency = ceil($current_numberofpages / $student->days_inrow);
+
+                $student->current_consistency = $current_numberofpages / $student->days_inrow;
 
                  if ($student->max_consistency < $student->current_consistency) {
                      $student->max_consistency = $student->current_consistency;

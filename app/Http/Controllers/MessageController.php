@@ -46,7 +46,13 @@ class MessageController extends Controller
 
         $admin = Auth::user();
         if($admin){
-        $data['admin_id'] =$admin->id;}
+        $data['admin_id'] =$admin->id;
+        }
+        else
+        {
+            $data['admin_id'] =null;
+        }
+
 
         $message = Message::create($data);
 

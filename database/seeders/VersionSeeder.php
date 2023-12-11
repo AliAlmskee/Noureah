@@ -32,7 +32,7 @@ class VersionSeeder extends Seeder
             ],
 
 
-
+            // بخاري
 
             [
                 'name' => 'مصطفى البغا',
@@ -40,7 +40,7 @@ class VersionSeeder extends Seeder
                 'book_id' => 2,
             ],
 
-
+            //مسلم
 
             [
                 'name' => 'مصطفى البغا',
@@ -83,12 +83,12 @@ class VersionSeeder extends Seeder
 
 
             [
-                'name' => 'دار المعرفة مكتب التراث الإسلامي',
+                'name' => ' مكتب التراث الإسلامي',
                 'no_pages' => 2454,
                 'book_id' => 6,
             ],
             [
-                'name' => 'محمد السيد علي محمد علي',
+                'name' => 'محمد السيد _علي محمد علي',
                 'no_pages' => 2903,
                 'book_id' => 6,
             ],
