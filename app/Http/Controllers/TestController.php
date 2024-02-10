@@ -16,15 +16,14 @@ class TestController extends Controller
     public function index(Request $request)
     {
         $id = $request->query('id');
-        $perPage = 15;
-        $page = $request->query('page', 1);
+        $perPage = 2;
 
         if ($id) {
             $tests = Test::whereHas('student', function ($query) use ($id) {
                 $query->where('branch_id', $id);
-            })->paginate($perPage);
+            })->latest()->paginate($perPage);
         } else {
-            $tests = Test::paginate($perPage);
+            $tests = Test::latest()->paginate($perPage);
         }
 
         foreach ($tests as $test) {
@@ -59,7 +58,7 @@ class TestController extends Controller
             'mark' => 'integer',
             'pages' => 'array',
             'emoji_id' =>'nullable|exists:emoji,id',
-            'date' => 'nullable|date_format:Y-m-d',
+            'date' => 'date_format:Y-m-d',
             'massage' =>'nullable|string' ,
         ]);
 
@@ -95,7 +94,7 @@ class TestController extends Controller
         if ($result->getData() === "page is not in this folder ") {
             return response()->json(['message' => 'page is not in this folder']);
         }
-        if ($result->getData() === "already done!") {
+        if ($result->getData() == "alrady done ! ") {
             return response()->json(['message' => 'already done!']);
         }
         $test = Test::create($data);

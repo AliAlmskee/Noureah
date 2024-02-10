@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Routing\Controller as BaseController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -23,7 +23,8 @@ class AuthController extends Controller
         ]);
 
         $user = new User();
-        $user->password = bcrypt($validatedData['password']);
+        $user->password = Hash::make($validatedData['password']);
+
         $user->name = $validatedData['name'];
         $user->role = $validatedData['role'];
 
@@ -38,15 +39,15 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validatedData = $request->validate([
-            'name' => 'required',
+            'phone' => 'required',
             'password' => 'required',
         ]);
 
-        if (auth()->attempt(['name' => $validatedData['name'], 'password' => $validatedData['password']])) {
+        if (auth()->attempt(['phone' => $validatedData['phone'], 'password' => $validatedData['password']])) {
             $user = auth()->user();
             $token = $user->createToken('AuthToken')->plainTextToken;
 
-            return response()->json(['Role' =>  $user->role,'branch_id'  =>  $user->branch_id , 'token' => $token]);
+            return response()->json(['Role' =>  $user->role, 'branch_id' =>  $user->branch_id, 'token' => $token]);
         } else {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
@@ -74,4 +75,36 @@ class AuthController extends Controller
     {
         return 3252;
     }
+
+
+    public function changepassword(Request $request)
+    {
+        $validatedData = $request->validate([
+            'old_password' => 'required',
+            'new_password' => 'required|string|min:6',
+        ]);
+        $user = Auth::user();
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 401);
+        }
+
+            User::find( $user->id)->update(['password'=>   Hash::make($request->new_password)]);
+             return response()->json(['message'=> ' password changed succsefully'],200);
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

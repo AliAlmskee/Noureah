@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Folder;
 use App\Models\Student;
+use App\Models\Exam;
 
 class BookStudentController extends Controller
 {
@@ -34,7 +35,7 @@ class BookStudentController extends Controller
     {
         $data = $request->validate([
             'student_id' => 'required|exists:students,id',
-            'version_id' => 'required|exists:books,id',
+            'version_id' => 'required|exists:versions,id',
         ]);
         $version = Version::findOrFail($data['version_id']);
         $book = Book::findOrFail( $version->book_id);
@@ -68,7 +69,7 @@ class BookStudentController extends Controller
 
         $assignedFinished = $bookStudent->assigned_finished;
         $assignedFinished[$request->number - 1] = 1;
-        $bookStudent->setAttribute('assigned_finished', $assignedFinished);
+        $bookStudent->assigned_finished=$assignedFinished;
         $bookStudent->save();
 
         return response()->json($bookStudent);
@@ -130,4 +131,42 @@ class BookStudentController extends Controller
 
         return ['finished' => $finished, 'curr' => $curr, 'unfinished' => array_values($unfinished)];
     }
+
+
+    public function exam_status($student_id,$version_id)
+    {
+        $bookStudent = BookStudent::where('student_id', $student_id)
+        ->where('version_id', $version_id)
+        ->first();
+
+        if(!$bookStudent)
+        {
+            return response()->json("wrong input ");
+
+
+        }
+        $version = Version::find($version_id);
+        $exams = Exam::where('student_id', $student_id)
+        ->where('book_id', $version->book_id)
+        ->where('status', "Pending")
+        ->get();
+
+        $approved = $bookStudent->assigned_finished;
+        $pending = str_repeat('0', strlen($approved));
+
+
+        foreach($exams as $exam)
+        {
+            $pending[$exam->number - 1 ]=1;
+
+        }
+
+        $response = [
+            "pending" => $pending,
+            "approved" => $approved
+        ];
+        return response()->json($response);
+
+    }
+
 }

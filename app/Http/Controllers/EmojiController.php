@@ -35,7 +35,7 @@ class EmojiController extends Controller
             $bid =$admin->branch_id;}
             else
             {
-                if (!$request->has('branch_id') || !in_array($request->branch_id, [1, 2, 3])) {
+                if (!$request->has('branch_id') || !in_array($request->branch_id, [1, 2, 3,4])) {
                     return response()->json(['error' => 'required coorect branch_id'], 400);
                 }
                 $bid=$request->branch_id ;

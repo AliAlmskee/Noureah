@@ -10,6 +10,7 @@ use App\Models\Student;
 use App\Models\Version;
 use App\Models\Book;
 use App\Models\Test;
+use Carbon\Carbon;
 
 class StudyProgressController extends Controller
 {
@@ -299,7 +300,20 @@ class StudyProgressController extends Controller
 
 
 
+    public function get_start_end_page($student_id)
+    {
+        $student = Student::find( $student_id );
+        if ($student) {
+            $folder = Folder::find($student->current_folder_id);
+            return response()->json(['start' => $folder->start_page,'end' => $folder->end_page],200);
 
+
+
+
+        }
+        return response()->json(['message' => 'Student not found ']);
+
+    }
 
 
 
@@ -314,6 +328,10 @@ class StudyProgressController extends Controller
             $student_id = $request->query('student_id');
             $folder_id = $request->query('folder_id');
 
+            $student = Student::find($student_id);
+            if($student->current_folder_id != $folder_id) {
+                return response()->json(['message' => 'Red']);
+            }
             if (!$student_id || !$folder_id) {
                 return response()->json(['error' => 'Missing student_id or folder_id'], 400);
             }
@@ -329,6 +347,7 @@ class StudyProgressController extends Controller
 
             $tests = Test::where('student_id', $student_id)
                 ->where('folder_id', $folder_id)
+                //->whereDate('date', Carbon::now()->format('Y-m-d'))
                 ->get();
 
             $finished = $studyProgress->finished;

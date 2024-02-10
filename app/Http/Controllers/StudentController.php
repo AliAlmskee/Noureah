@@ -13,8 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use App\Models\Test;
 
@@ -22,7 +20,7 @@ use App\Models\Test;
 class StudentController extends Controller
 {
 
-    //admin id
+           //admin id
             public function index(Request $request)
         {
             $id = $request->query('id');
@@ -55,7 +53,7 @@ class StudentController extends Controller
                 unset($student->created_at);
                 unset($student->updated_at);
                 unset($student->days_inrow);
-                unset($student->branch_id);
+
 
                 $student->folder_name = $foldername;
                 $student->version_name = $versionname;
@@ -293,7 +291,7 @@ class StudentController extends Controller
                 'version_id' => $request->version_id,
             ]);
 
-            $bookStudentResponse = $bookStudentController->store($bookStudentRequest);
+            $bookStudentController->store($bookStudentRequest);
 
             $bookStudent = BookStudent::where('student_id', $request->student_id)
                 ->where('version_id', $request->version_id)
@@ -616,4 +614,66 @@ class StudentController extends Controller
 
 
             }
-}
+
+
+
+            public function student_finishedbook($branch_id)
+            {
+                if ($branch_id > 4 || $branch_id < 1 || !$branch_id) {
+                    $students = Student::all();
+                } else {
+                    $students = Student::where('branch_id', $branch_id)->get();
+                }
+
+
+                foreach ($students as $key => $student) {
+                    $folder = Folder::find($student->current_folder_id);
+                    $version = Version::find($folder->version_id);
+
+                    $bookStudent = BookStudent::where('student_id', $student->id)
+                        ->where('version_id', $version->id)
+                        ->first();
+
+
+                    if ($bookStudent->percentage_finished != 100) {
+                        $students->forget($key);
+                    }
+                }
+
+                $modifiedStudents = [];
+
+                foreach ($students as $student) {
+                    $folder = Folder::find($student->current_folder_id);
+                    $version = Version::find($folder->version_id);
+                    $book = Book::find($version->book_id);
+
+                    $student->branch_name = Branch::find($student->branch_id)->name;
+                    $foldername = $folder->name;
+                    $versionname = $version->name;
+                    $bookname = $book->name;
+
+                    unset($student->created_at);
+                    unset($student->updated_at);
+                    unset($student->days_inrow);
+
+                    $student->folder_name = $foldername;
+                    $student->version_name = $versionname;
+                    $student->book_name = $bookname;
+
+                    $modifiedStudents[] = $student;
+                }
+
+                return response()->json($modifiedStudents);
+            }
+
+
+
+
+
+
+
+
+
+
+
+        }

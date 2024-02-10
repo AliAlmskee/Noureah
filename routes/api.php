@@ -54,12 +54,20 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
     Route::post('/approveExam',[ExamController::class,'approveExam']);
     Route::post('/statistics',[StatisticsController::class,'n2']);
+    Route::post('/teachers_statistics',[StatisticsController::class,'teachers_statistics']);
+
     Route::apiResource('emoji', EmojiController::class);
     Route::get('emojis/{branch_id}', 'App\Http\Controllers\EmojiController@getEmojisByBranch');
     Route::delete('emojis/{id}', 'App\Http\Controllers\EmojiController@delete');
     Route::get('emojis/student', 'App\Http\Controllers\EmojiController@emojis_student');
     Route::get('emojis_photo/{id}', 'App\Http\Controllers\EmojiController@getImage');
 
+    Route::post('/changetheBook',[StudyProgressController::class,'changetheBook']);
+
+
+    Route::post('/change_password', [AuthController::class, 'changepassword']);
+    Route::get('/version_folders/{id}', [FolderController::class, 'index']);
+    Route::get('/finished_students/{branch_id}',[StudentController::class,'student_finishedbook']);
 
 
 });
@@ -101,7 +109,6 @@ Route::put('/exams/{exam}/approve', 'App\Http\Controllers\ExamController@approve
 
 
 Route::post('/calculatePercentage',[StudyProgressController::class,'calculatePercentage']);
-Route::post('/changetheBook',[StudyProgressController::class,'changetheBook']);
 
 
 
@@ -115,3 +122,9 @@ Route::get('/pages_colors',[StudyProgressController::class,'pagescolors']);
 
 
 Route::get('get_delta/{id}',[StudentController::class,'get_delta']);
+
+
+Route::get('folder_info/{student_id}',[StudyProgressController::class,'get_start_end_page']);
+
+
+Route::get('exam_status/{student_id}/{version_id}',[BookStudentController::class,'exam_status']);

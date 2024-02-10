@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use App\Http\Controllers\BookStudentController;
 use App\Models\Folder;
 use App\Models\Version;
+use Illuminate\Support\Facades\Auth;
 
 class ExamController extends Controller
 {
@@ -18,9 +19,12 @@ class ExamController extends Controller
 
     public function index(Request $request)
     {
+        $status = $request->query('status');
+        $perPage = 15;
+        $exams = Exam::where('status', $status)
+            ->latest()
+            ->paginate($perPage);
 
-        $status = $request->query('status');;
-        $exams = Exam::where('status', $status)->get();
         foreach ($exams as $exam) {
             $exam->student_name = Student::find($exam->student_id)->name;
             $exam->book_name = Book::find($exam->book_id)->name;
@@ -31,10 +35,11 @@ class ExamController extends Controller
             unset($exam->book_id);
             unset($exam->created_at);
             unset($exam->updated_at);
-
         }
 
-        return response()->json($exams);
+        $examsData = $exams->items();
+
+        return response()->json($examsData);
     }
 
     public function store(Request $request)
@@ -46,7 +51,7 @@ class ExamController extends Controller
             'number' => 'required|integer',
             'date' => 'nullable|date_format:Y-m-d',
         ]);
-        $student = Student::find($request->student_id);
+            $student = Student::find($request->student_id);
             $folder = Folder::find($student->current_folder_id);
             $version = Version::find($folder->version_id);
         if($request->number> Book::find( $version->book_id )->no_exams || $version->book_id ==1 )
@@ -55,6 +60,8 @@ class ExamController extends Controller
 
         }
         $data['status'] ="Pending" ;
+        $data['book_id'] =$version->book_id ;
+
         $exam = Exam::create($data);
 
         return response()->json($exam, 201);
@@ -89,12 +96,11 @@ class ExamController extends Controller
     {
         $data = $request->validate([
             'exam_id' => 'required|exists:exams,id',
-            'admin_id' => 'required|exists:admins,id',
         ]);
 
         $exam = Exam::findOrFail($data['exam_id']);
         $exam->status = 'Approved';
-        $exam->admin_id = $data['admin_id'];
+        $exam->admin_id = auth()->id();
         $exam->save();
 
         $bookStudentRequest = new Request([
@@ -108,5 +114,7 @@ class ExamController extends Controller
 
         return response()->json($exam);
     }
+
+
 
 }
