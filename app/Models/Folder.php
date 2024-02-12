@@ -14,4 +14,12 @@ class Folder extends Model
     {
         return $this->belongsTo(Version::class);
     }
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
+    public function tests()
+    {
+        return $this->hasMany(Test::class);
+    }
 }

@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Test;
 use App\Models\Student;
-use App\Models\Teacher;
-use App\Models\Folder;
-use App\Models\emoji;
 use Illuminate\Http\Request;
 use App\Http\Controllers\StudyProgressController ;
 use Illuminate\Support\Facades\Validator;
@@ -16,7 +13,7 @@ class TestController extends Controller
     public function index(Request $request)
     {
         $id = $request->query('id');
-        $perPage = 2;
+        $perPage = 15;
 
         if ($id) {
             $tests = Test::whereHas('student', function ($query) use ($id) {
@@ -27,11 +24,11 @@ class TestController extends Controller
         }
 
         foreach ($tests as $test) {
-            $test->teacher_name = Teacher::find($test->teacher_id)->name;
-            $test->student_name = Student::find($test->student_id)->name;
-            $test->folder_name = Folder::find($test->folder_id)->name;
+            $test->teacher_name = $test->teacher->name ?? null;
+            $test->student_name =$test->student->name;
+            $test->folder_name = $test->folder->name;
             if ($test->emoji_id) {
-                $test->emoji = Emoji::find($test->emoji_id)->emoji;
+                $test->emoji = $test->emoji->emoji;
                 unset($test->emoji_id);
             }
             unset($test->teacher_id);
@@ -150,11 +147,12 @@ class TestController extends Controller
         $tests = Test::where('student_id', $id)->where('folder_id', $folder_id)->get();
 
         foreach ($tests as $test) {
-            $test->teacher_name = Teacher::find($test->teacher_id)->name;
-            $test->folder_name = Folder::find($test->folder_id)->name;
+            $test->teacher_name = $test->teacher->name;
+            $test->folder_name = $test->folder->name;
+
 
             if ($test->emoji_id) {
-                $test->emojiUrl = Emoji::find($test->emoji_id)->emoji;
+                $test->emojiUrl = $test->emoji->emoji;
                 unset($test->emoji_id);
             }
             unset($test->emoji_id);

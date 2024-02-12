@@ -32,7 +32,7 @@ class BookController extends Controller
     public function update(Request $request, Book $book)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'string|max:255',
             'no_exams' => 'integer',
         ]);
 

@@ -15,4 +15,8 @@ class Teacher extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+    public function tests()
+    {
+        return $this->hasMany(Test::class);
+    }
 }

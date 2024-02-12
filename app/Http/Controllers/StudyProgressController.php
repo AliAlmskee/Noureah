@@ -14,18 +14,14 @@ use Carbon\Carbon;
 
 class StudyProgressController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+   
     public function index()
     {
         $studyProgresses = StudyProgress::all();
         return response()->json($studyProgresses);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+ 
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -69,8 +65,6 @@ class StudyProgressController extends Controller
             if( $finished[$page - $startPage  ] == 1)
             {
                 return response()->json("alrady done ! ");
-
-
             }
             $finished[$page - $startPage  ] = 1;
         }
@@ -117,7 +111,7 @@ class StudyProgressController extends Controller
         $startPage = $request->input('start_page');
         $endPage = $request->input('end_page');
 
-        $folder = Folder::find($student->current_folder_id);
+        $folder =$student->currentFolder;
         $firstPage = $folder->start_page;
         $finalPage = $folder->end_page;
 
@@ -155,30 +149,30 @@ class StudyProgressController extends Controller
     {
         $student =Student::find($student_id);
 
-        $folder = Folder::find( $student->current_folder_id );
+        $folder =$student->currentFolder;
         $nextfolder = Folder::find( $student->current_folder_id + 1  );
 
         if($folder->version_id ==$nextfolder->version_id )
         {
             $student->current_folder_id =   $student->current_folder_id  + 1 ;
-
         }
         else
         {
-
             $this->autochangetheBook($student_id);
-
         }
     }
     public function    autochangetheBook($student_id){
         $student =Student::find($student_id);
-        $folder = Folder::find( $student->current_folder_id );
-        $version = Version::find( $folder->version_id );
-        $book = Book::find( $version->book_id);
+        $folder =$student->currentFolder;
+        $version = $folder->version;
+        $book =$version->book;
 
         if($book->id===1)
         {
-            $student->current_folder_id = 5;
+            $nextFolder= $book->versions->flatMap(function ($version) {
+                return $version->folders;
+            })->count() + 1;
+            $student->current_folder_id =   $nextFolder;
             $student->save();
             $studyProgressController = new StudyProgressController();
             $studyProgressRequest = new Request([
@@ -189,7 +183,7 @@ class StudyProgressController extends Controller
             $studyProgressController->store($studyProgressRequest);
 
             $bookStudentController = new BookStudentController();
-            $folder = Folder::find(5);
+            $folder = Folder::find($nextFolder);
             $bookStudentRequest = new Request([
                 'student_id' => $student->id,
                 'version_id' =>  $folder->version_id ,
@@ -298,29 +292,17 @@ class StudyProgressController extends Controller
     }
 
 
-
-
     public function get_start_end_page($student_id)
     {
         $student = Student::find( $student_id );
         if ($student) {
-            $folder = Folder::find($student->current_folder_id);
+            $folder =$student->currentFolder;
             return response()->json(['start' => $folder->start_page,'end' => $folder->end_page],200);
-
-
-
 
         }
         return response()->json(['message' => 'Student not found ']);
 
     }
-
-
-
-
-
-
-
 
 
         public function pagescolors(Request $request)

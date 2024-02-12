@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -36,18 +37,23 @@ class AuthController extends Controller
         return response()->json(['message' => 'Registration successful']);
     }
 
+
     public function login(Request $request)
     {
-        $validatedData = $request->validate([
-            'phone' => 'required',
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
             'password' => 'required',
         ]);
-
-        if (auth()->attempt(['phone' => $validatedData['phone'], 'password' => $validatedData['password']])) {
+    
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->first()], 422);
+        }
+    
+        if (auth()->attempt(['name' => $request->input('name'), 'password' => $request->input('password')])) {
             $user = auth()->user();
             $token = $user->createToken('AuthToken')->plainTextToken;
-
-            return response()->json(['Role' =>  $user->role, 'branch_id' =>  $user->branch_id, 'token' => $token]);
+    
+            return response()->json(['Role' => $user->role, 'branch_id' => $user->branch_id, 'token' => $token]);
         } else {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
@@ -63,17 +69,6 @@ class AuthController extends Controller
     public function getAuthenticatedUserId()
     {
         return Auth::id();
-    }
-
-
-    public function test()
-    {
-        return 352;
-    }
-
-    public function test2()
-    {
-        return 3252;
     }
 
 
@@ -93,18 +88,6 @@ class AuthController extends Controller
 
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

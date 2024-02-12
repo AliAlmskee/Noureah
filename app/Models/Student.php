@@ -31,4 +31,10 @@ class Student extends Model
     {
         return $this->belongsTo(Folder::class, 'current_folder_id');
     }
+
+    public function tests()
+    {
+        return $this->hasMany(Test::class);
+    }
+    
 }

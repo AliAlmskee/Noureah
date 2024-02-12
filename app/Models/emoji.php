@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class emoji extends Model
+class Emoji extends Model
 {
     use HasFactory;
 
@@ -24,4 +24,5 @@ class emoji extends Model
     {
         return $this->belongsTo(Branch::class, 'branch_id');
     }
+  
 }

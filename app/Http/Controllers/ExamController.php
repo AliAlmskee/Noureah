@@ -26,9 +26,9 @@ class ExamController extends Controller
             ->paginate($perPage);
 
         foreach ($exams as $exam) {
-            $exam->student_name = Student::find($exam->student_id)->name;
-            $exam->book_name = Book::find($exam->book_id)->name;
-            $exam->teacher_name = Teacher::find($exam->teacher_id)->name;
+            $exam->student_name =$exam->student->name;
+            $exam->book_name =$exam->book->name;
+            $exam->teacher_name = $exam->teacher->name ?? null;
 
             unset($exam->student_id);
             unset($exam->teacher_id);
@@ -52,12 +52,21 @@ class ExamController extends Controller
             'date' => 'nullable|date_format:Y-m-d',
         ]);
             $student = Student::find($request->student_id);
-            $folder = Folder::find($student->current_folder_id);
-            $version = Version::find($folder->version_id);
-        if($request->number> Book::find( $version->book_id )->no_exams || $version->book_id ==1 )
+            $folder =$student->currentFolder;
+            $version =$folder->version;
+        if($request->number > $version->book->no_exams || $version->book_id ==1 )
         {
             return response()->json("invalid number of exam");
 
+        }
+        $existingExam = Exam::where([
+            'book_id' => $version->book_id,
+            'student_id' => $request->student_id,
+            'number' => $request->number,
+        ])->first();
+    
+        if ($existingExam) {
+            return response()->json("Exam already been taken", 400);
         }
         $data['status'] ="Pending" ;
         $data['book_id'] =$version->book_id ;

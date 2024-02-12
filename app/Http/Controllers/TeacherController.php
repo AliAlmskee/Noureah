@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Branch;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 
@@ -18,7 +17,7 @@ class TeacherController extends Controller
         }
 
         foreach ($teachers as $teacher) {
-            $teacher->branch_name = Branch::find($teacher->branch_id)->name;
+            $teacher->branch_name = $teacher->branch->name;
             unset($teacher->branch_id);
             unset($teacher->created_at);
             unset($teacher->updated_at);

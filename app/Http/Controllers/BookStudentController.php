@@ -21,7 +21,7 @@ class BookStudentController extends Controller
         if(!$student)
         {        return response()->json('error');
         }
-        $folder = Folder::find($student->current_folder_id);
+        $folder = $student->currentFolder;
 
 
         $bookStudents = BookStudent::where('student_id',$student_id)->where('version_id',$folder->version_id)->first();
@@ -38,7 +38,7 @@ class BookStudentController extends Controller
             'version_id' => 'required|exists:versions,id',
         ]);
         $version = Version::findOrFail($data['version_id']);
-        $book = Book::findOrFail( $version->book_id);
+        $book =  $version->book;
         $data['assigned_finished'] = str_repeat('0', $book->no_exams);
 
         $bookStudent = BookStudent::create($data);
@@ -50,9 +50,9 @@ class BookStudentController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'student_id' => 'required|integer',
-            'book_id' => 'required|integer',
-            'number' => 'required|integer',
+            'student_id' => 'integer',
+            'book_id' => 'integer',
+            'number' => 'integer',
         ]);
 
         if ($validator->fails()) {

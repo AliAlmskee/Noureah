@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 use App\Models\emoji;
 use App\Models\Test;
 use Illuminate\Http\Request;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 
 class EmojiController extends Controller

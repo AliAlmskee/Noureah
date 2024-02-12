@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BookStudent;
-use App\Models\Student;
-use App\Models\Folder;
 use App\Models\Book;
+use App\Models\BookStudent;
 use App\Models\Branch;
-use App\Models\Version;
+use App\Models\Folder;
+use App\Models\Student;
 use App\Models\StudyProgress;
+use App\Models\Test;
+use App\Models\Version;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
-use App\Models\Test;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 
 class StudentController extends Controller
 {
 
            //admin id
-            public function index(Request $request)
+      public function index(Request $request)
         {
             $id = $request->query('id');
             $perPage = 15;
@@ -37,15 +38,15 @@ class StudentController extends Controller
             $modifiedStudents = [];
 
             foreach ($students as $student) {
-                $folder = Folder::find($student->current_folder_id);
-                $version = Version::find($folder->version_id);
-                $book = Book::find($version->book_id);
+                $folder =$student->currentFolder;
+                $version = $folder->version;
+                $book =$version->book;
 
                 if ($book_id && $book_id != $book->id) {
                     continue;
                 }
 
-                $student->branch_name = Branch::find($student->branch_id)->name;
+                $student->branch_name = $student->branch->name;
                 $foldername = $folder->name;
                 $versionname = $version->name;
                 $bookname = $book->name;
@@ -74,9 +75,12 @@ class StudentController extends Controller
         }
     public function store(Request $request)
     {
+
+        $book = Book::find(1);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required',
-            'version_id' => 'required|between:1,4',
+            'version_id' => 'required|numeric|between:1,' . $book->versions->count(),
         ]);
 
 
@@ -96,15 +100,15 @@ class StudentController extends Controller
             $studentData['branch_id']=$request->branch_id ;
 
         }
-
-        if(  $studentData['version_id'] > 4 || $studentData['version_id'] < 1  )
-        { return response()->json('error version_id  must be between 1 and 4 ', 400);  }
-
+        if ($studentData['version_id'] > $book->versions->count() || $studentData['version_id'] < 1) {
+            $errorMessage = "version_id must be between 1 and {$book->versions->count()}";
+            return response()->json(['error' => $errorMessage], 400);
+        }
 
         $studentData['key'] = $this->generateRandomKey();
 
-        $studentData['current_folder_id'] = $studentData['version_id'];
-
+        $version = Version::find($studentData['version_id']);
+        $studentData['current_folder_id'] = $version->folders->first()->id;
         $student = Student::create($studentData);
    //     make this another function and call it here
         $studyProgressController = new StudyProgressController();
@@ -123,7 +127,7 @@ class StudentController extends Controller
         ]);
 
         $bookStudentResponse = $bookStudentController->store($bookStudentRequest);
-      //  .
+      
         return response()->json($student, 201);
     }
     public function update(Request $request, $id)
@@ -248,7 +252,7 @@ class StudentController extends Controller
         $bookStudentResponse = $bookStudentController->store($bookStudentRequest);
 
         $version = Version::find($version_id);
-        $folders = Folder::where('version_id', $version->id)->get();
+        $folders =  $version->folders;
 
         foreach ($folders as $folder) {
             if ($folder->id < $request->folder_id) {
@@ -350,7 +354,7 @@ class StudentController extends Controller
     public function getId($key)
     {
         $student = Student::where('key', $key)->first();
-        $folder = Folder::find($student->current_folder_id);
+        $folder =$student->currentFolder;
 
         if ($student) {
             $result = [
@@ -477,11 +481,11 @@ class StudentController extends Controller
             $student = Student::find($student_id);
 
             if ($student) {
-                $folder = Folder::find($student->current_folder_id);
-                $version = Version::find($folder->version_id);
-                $book = Book::find($version->book_id);
+                $folder =$student->currentFolder;
+                $version = $folder->version;
+                $book =$version->book;
 
-                $student->branch_name = Branch::find($student->branch_id)->name;
+                $student->branch_name = $student->branch->name;
                 $foldername = $folder->name;
                 $versionname = $version->name;
                 $bookname = $book->name;
@@ -525,9 +529,9 @@ class StudentController extends Controller
                 $student_id = $request->query('student_id');
                 $student = Student::find($student_id);
 
-                $folder = Folder::find($student->current_folder_id);
-                $version = Version::find($folder->version_id);
-                $book = Book::find($version->book_id);
+                $folder =$student->currentFolder;
+                $version = $folder->version;
+                $book =$version->book;
                 $origin_book_id = $book->id;
 
                 $students = Student::where('branch_id', $student->branch_id)->get();
@@ -535,9 +539,9 @@ class StudentController extends Controller
                 $topStudents = [];
 
                 foreach ($students as $otherStudent) {
-                    $otherFolder = Folder::find($otherStudent->current_folder_id);
-                    $otherVersion = Version::find($otherFolder->version_id);
-                    $otherBook = Book::find($otherVersion->book_id);
+                    $otherFolder = $otherStudent->currentFolder;
+                    $otherVersion = $otherFolder->version;
+                    $otherBook = $otherVersion->book;
                     $otherBookId = $otherBook->id;
 
                     if ($otherBookId == $origin_book_id) {
@@ -627,8 +631,8 @@ class StudentController extends Controller
 
 
                 foreach ($students as $key => $student) {
-                    $folder = Folder::find($student->current_folder_id);
-                    $version = Version::find($folder->version_id);
+                    $folder =$student->currentFolder;
+                    $version = $folder->version;
 
                     $bookStudent = BookStudent::where('student_id', $student->id)
                         ->where('version_id', $version->id)
@@ -643,11 +647,11 @@ class StudentController extends Controller
                 $modifiedStudents = [];
 
                 foreach ($students as $student) {
-                    $folder = Folder::find($student->current_folder_id);
-                    $version = Version::find($folder->version_id);
-                    $book = Book::find($version->book_id);
+                    $folder =$student->currentFolder;
+                    $version = $folder->version;
+                    $book =$version->book;
 
-                    $student->branch_name = Branch::find($student->branch_id)->name;
+                    $student->branch_name = $student->branch->name;
                     $foldername = $folder->name;
                     $versionname = $version->name;
                     $bookname = $book->name;
@@ -665,15 +669,5 @@ class StudentController extends Controller
 
                 return response()->json($modifiedStudents);
             }
-
-
-
-
-
-
-
-
-
-
 
         }

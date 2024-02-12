@@ -21,16 +21,6 @@ use Illuminate\Support\Facades\Route;
 
 
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -53,7 +43,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::apiResource('students', StudentController::class);
 
     Route::post('/approveExam',[ExamController::class,'approveExam']);
-    Route::post('/statistics',[StatisticsController::class,'n2']);
+    Route::post('/statistics',[StatisticsController::class,'student_statistics']);
     Route::post('/teachers_statistics',[StatisticsController::class,'teachers_statistics']);
 
     Route::apiResource('emoji', EmojiController::class);
@@ -71,60 +61,56 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
 
 });
-Route::apiResource('tests', TestController::class);
-Route::apiResource('exams', ExamController::class);
+    Route::apiResource('tests', TestController::class);
+    Route::apiResource('exams', ExamController::class);
 
     Route::get('emojis/{branch_id}', 'App\Http\Controllers\EmojiController@getEmojisByBranch');
     Route::get('emojis_photo/{id}', 'App\Http\Controllers\EmojiController@getImage');
 
-Route::post('/finished-pages', [StudyProgressController::class, 'finishedPages']);
-Route::get('/version_folders/{id}', [FolderController::class, 'index']);
+    Route::post('/finished-pages', [StudyProgressController::class, 'finishedPages']);
+    Route::get('/version_folders/{id}', [FolderController::class, 'index']);
 
-Route::get('/bookStatus/{id}',[BookStudentController::class,'bookStatus']);
+    Route::get('/bookStatus/{id}',[BookStudentController::class,'bookStatus']);
 
-Route::get('/student_search',[StudentController::class,'search']);
-Route::get('/profile',[StudentController::class,'profile']);
-Route::put('/students/{id}',[StudentController::class,'update']);
-Route::get('/students',[StudentController::class,'index']);
-Route::get('/student_image/{imageURL}',[StudentController::class,'student_image']);
-
-
-Route::apiResource('study-progresses', StudyProgressController::class);
-Route::apiResource('bookstudents', BookStudentController::class);
+    Route::get('/student_search',[StudentController::class,'search']);
+    Route::get('/profile',[StudentController::class,'profile']);
+    Route::put('/students/{id}',[StudentController::class,'update']);
+    Route::get('/students',[StudentController::class,'index']);
+    Route::get('/student_image/{imageURL}',[StudentController::class,'student_image']);
 
 
-Route::apiResource('branches', BranchController::class);
-Route::apiResource('teachers', TeacherController::class);
+    Route::apiResource('study-progresses', StudyProgressController::class);
+    Route::apiResource('bookstudents', BookStudentController::class);
 
 
-
-
-
-Route::post('/change_student_photo/{id}','App\Http\Controllers\StudentController@changephoto');
-Route::put('/exams/{exam}/approve', 'App\Http\Controllers\ExamController@approveExam');
+    Route::apiResource('branches', BranchController::class);
+    Route::apiResource('teachers', TeacherController::class);
 
 
 
 
 
-
-Route::post('/calculatePercentage',[StudyProgressController::class,'calculatePercentage']);
-
-
+    Route::post('/change_student_photo/{id}','App\Http\Controllers\StudentController@changephoto');
+    Route::put('/exams/{exam}/approve', 'App\Http\Controllers\ExamController@approveExam');
 
 
 
-Route::get('/getidby_key/{key}',[StudentController::class,'getId']);
-
-Route::get('top3',[StudentController::class,'top3']);
-Route::get('/testby_id/{id}/{folder_id}',[TestController::class,'testforstudent']);
-Route::get('/pages_colors',[StudyProgressController::class,'pagescolors']);
 
 
-Route::get('get_delta/{id}',[StudentController::class,'get_delta']);
+
+    Route::post('/calculatePercentage',[StudyProgressController::class,'calculatePercentage']);
+
+    Route::get('/getidby_key/{key}',[StudentController::class,'getId']);
+
+    Route::get('top3',[StudentController::class,'top3']);
+    Route::get('/testby_id/{id}/{folder_id}',[TestController::class,'testforstudent']);
+    Route::get('/pages_colors',[StudyProgressController::class,'pagescolors']);
 
 
-Route::get('folder_info/{student_id}',[StudyProgressController::class,'get_start_end_page']);
+    Route::get('get_delta/{id}',[StudentController::class,'get_delta']);
 
 
-Route::get('exam_status/{student_id}/{version_id}',[BookStudentController::class,'exam_status']);
+    Route::get('folder_info/{student_id}',[StudyProgressController::class,'get_start_end_page']);
+
+
+    Route::get('exam_status/{student_id}/{version_id}',[BookStudentController::class,'exam_status']);
