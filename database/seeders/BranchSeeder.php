@@ -7,26 +7,31 @@ use App\Models\Branch;
 
 class BranchSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $branches = [
             [
-                "name" => "المقر الرئيسي / الأموي"
+                "name" => "المقر الرئيسي / الأموي",
+                "season_start" => "2024-02-01",
+                "season_end" => "2024-02-28",
             ],
             [
-                "name" => "مقر حسيبة"
+                "name" => "مقر حسيبة",
+                "season_start" => "2024-02-01",
+                "season_end" => "2024-02-28",
             ],
             [
-                "name" => "مقر دير قانون"
+                "name" => "مقر دير قانون",
+                "season_start" => "2024-02-01",
+                "season_end" => "2024-02-28",
             ],
             [
-                "name" => "غير ذلك"
-            ]
+                "name" => "أونلاين",
+                "season_start" => "2024-02-01",
+                "season_end" => "2024-02-28",
+            ],
         ];
-
+    
         foreach ($branches as $branch) {
             Branch::create($branch);
         }

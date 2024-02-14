@@ -7,7 +7,6 @@ use App\Models\Book;
 use App\Models\Version;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Folder;
 use App\Models\Student;
 use App\Models\Exam;
 
@@ -19,7 +18,8 @@ class BookStudentController extends Controller
 
         $student = Student::find($student_id);
         if(!$student)
-        {        return response()->json('error');
+        {  
+                  return response()->json('error');
         }
         $folder = $student->currentFolder;
 
@@ -51,7 +51,7 @@ class BookStudentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'student_id' => 'integer',
-            'book_id' => 'integer',
+            'version_id' => 'integer',
             'number' => 'integer',
         ]);
 
@@ -60,7 +60,7 @@ class BookStudentController extends Controller
         }
 
         $bookStudent = BookStudent::where('student_id', $request->student_id)
-            ->where('book_id', $request->book_id)
+            ->where('version_id', $request->version_id)
             ->first();
 
         if (!$bookStudent) {

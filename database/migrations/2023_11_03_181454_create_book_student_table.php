@@ -16,6 +16,8 @@ return new class extends Migration
             $table->integer('percentage_finished')->default(0);
             $table->binary('assigned_finished')->default("\x00");
             $table->timestamps();
+            $table->unique(['student_id', 'version_id']);
+
         });
     }
     public function down(): void

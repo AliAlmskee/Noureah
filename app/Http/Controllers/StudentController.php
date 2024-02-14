@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\BookStudent;
 use App\Models\Branch;
+use App\Models\Emoji;
 use App\Models\Folder;
 use App\Models\Student;
 use App\Models\StudyProgress;
@@ -208,70 +209,88 @@ class StudentController extends Controller
             'name' => 'required',
             'folder_id' => 'required',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
-
-        $studentData['key'] =  $this->generateRandomKey();
+    
+        $studentData['key'] = $this->generateRandomKey();
         $admin = Auth::user();
-        if($admin->branch_id){
-        $studentData['branch_id'] =$admin->branch_id;
-
-         }
-        else
-        {
-            if (!$request->has('branch_id') || !in_array($request->branch_id, [1, 2, 3,4])) {
-                return response()->json(['error' => 'required corect branch_id'], 400);
+    
+        if ($admin->branch_id) {
+            $studentData['branch_id'] = $admin->branch_id;
+        } else {
+            if (!$request->has('branch_id') || !in_array($request->branch_id, [1, 2, 3, 4])) {
+                return response()->json(['error' => 'required correct branch_id'], 400);
             }
-            $studentData['branch_id']=$request->branch_id ;
-
+            $studentData['branch_id'] = $request->branch_id;
         }
+    
         $student = Student::create([
             'name' => $request->input('name'),
-            'branch_id' =>$studentData['branch_id'] ,
+            'branch_id' => $studentData['branch_id'],
             'current_folder_id' => $request->input('folder_id'),
             'key' => $studentData['key'],
         ]);
-
+    
         $studyProgressController = new StudyProgressController();
         $studyProgressRequest = new Request([
             'student_id' => $student->id,
             'folder_id' => $student->current_folder_id,
         ]);
-
+    
         $studyProgressController->store($studyProgressRequest);
-
+    
         $version_id = Folder::find($request->folder_id)->version_id;
         $bookStudentController = new BookStudentController();
         $bookStudentRequest = new Request([
             'student_id' => $student->id,
-            'version_id' =>  $version_id,
+            'version_id' => $version_id,
         ]);
-
+    
         $bookStudentResponse = $bookStudentController->store($bookStudentRequest);
-
+    
         $version = Version::find($version_id);
-        $folders =  $version->folders;
-
+        $folders = $version->folders;
+    
         foreach ($folders as $folder) {
             if ($folder->id < $request->folder_id) {
                 $request2 = new Request([
                     'folder_id' => $folder->id,
-                    'student_id' =>  $student->id,
+                    'student_id' => $student->id,
                 ]);
-
+    
                 $this->addFinishedFolder($request2);
             }
         }
+    
         $newRequest = new Request([
-            'student_id' =>$student->id,
+            'student_id' => $student->id,
             'folderid' => $request->folder_id,
         ]);
+    
         $studyProgressController->calculatePercentage($newRequest);
-        return response()->json($student, 201);
-    }
+    
+        $modifiedStudent = $student;
+        $modifiedStudent->branch_name = $student->branch->name;
+        $folder = $student->currentFolder;
+        $version = $folder->version;
+        $book = $version->book;
+    
+        $modifiedStudent->folder_name = $folder->name;
+        $modifiedStudent->version_name = $version->name;
+        $modifiedStudent->book_name = $book->name;
 
+        $modifiedStudent->previous_consistency =0;
+        $modifiedStudent->current_consistency =0;
+        $modifiedStudent->max_consistency =0;
+        unset($modifiedStudent->branch_id);
+        unset($modifiedStudent->created_at);
+        unset($modifiedStudent->updated_at);
+        unset($modifiedStudent->days_inrow);
+    
+        return response()->json($modifiedStudent, 201);
+    }
 
 
     public function addFinishedBook(Request $request)
@@ -328,9 +347,10 @@ class StudentController extends Controller
         $studyProgress = StudyProgress::where('student_id', $request->student_id)
             ->where('folder_id', $request->folder_id)
             ->first();
+            
+         $studyProgressController = new StudyProgressController();
 
         if (!$studyProgress) {
-            $studyProgressController = new StudyProgressController();
             $studyProgressRequest = new Request([
                 'student_id' => $request->student_id,
                 'folder_id' => $request->folder_id,
@@ -344,6 +364,12 @@ class StudentController extends Controller
         $studyProgress['finished'] = str_repeat('1', strlen($studyProgress['finished']));
 
         $studyProgress->save();
+
+        $newRequest = new Request([
+            'student_id' => $request->student_id,
+            'folderid' => $request->folder_id,
+        ]);
+        $studyProgressController->calculatePercentage($newRequest);
 
         return response()->json([
             'message' => 'Finished folder has been added successfully',
@@ -431,9 +457,9 @@ class StudentController extends Controller
         $mostRelevantStudents = $sortedStudents;
         $newstudent = $mostRelevantStudents;
         foreach ($newstudent as  $student) {
-            $folder = Folder::find($student->current_folder_id);
-            $version = Version::find($folder->version_id);
-            $book = Book::find($version->book_id);
+            $folder = $student->currentFolder;
+            $version = $folder->version;
+            $book = $version->book;
             $student->branch_name = Branch::find($student->branch_id)->name;
             $foldername = $folder->name;
             $versionname = $version->name;
@@ -509,16 +535,15 @@ class StudentController extends Controller
             $messageRequest = Request::create('/messages', 'GET', ['student_id' => $student_id]);
             $messageResponse = $messageController->index($messageRequest);
 
-            $emojiController = app()->make(EmojiController::class);
-            $emojiRequest = Request::create('/emojis/student', 'GET', ['student_id' => $student_id]);
-            $emojiResponse = $emojiController->emojis_student($emojiRequest);
+      
+            $emojiIds = Test::where('student_id', $student_id)->pluck('emoji_id')->filter()->values();
 
             $response = [
-                'student' =>   $student ,
-                'emojis' => $emojiResponse->getData()->emojis ?? [],
+                'student' => $student,
+                'emojis' => $emojiIds->all(),
                 'thanks_messages' => $messageResponse->getData()->thanks_messages ?? [],
             ];
-
+            
             return response()->json($response, 200);
         }
 

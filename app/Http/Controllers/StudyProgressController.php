@@ -80,11 +80,12 @@ class StudyProgressController extends Controller
 
        $this->calculatePercentage($newRequest);
 
-       // if($percentage!=100.0)
-       // {
-        //    autochangethefolder($request->student_id);
-
-       // }
+         $percentage =  $this->calculateFolderPercentage($newRequest);
+        if($percentage==100)
+        {
+               $this->autochangethefolder($request->student_id);
+        }
+       
         return response()->json($studyProgress);
     }
 
@@ -137,7 +138,7 @@ class StudyProgressController extends Controller
             'student_id' => $studyProgress->student_id,
             'folderid' => $studyProgress->folder_id,
         ]);
-        $percentage =  $this->calculatePercentage($newRequest);
+        $percentage =  $this->calculateFolderPercentage($newRequest);
          if($percentage==100)
         {
            $this->autochangethefolder($request->student_id);
@@ -155,19 +156,34 @@ class StudyProgressController extends Controller
         if($folder->version_id ==$nextfolder->version_id )
         {
             $student->current_folder_id =   $student->current_folder_id  + 1 ;
+            $studyProgressController = new StudyProgressController();
+            $studyProgressRequest = new Request([
+                'student_id' => $student->id,
+                'folder_id' => $student->current_folder_id,
+            ]);
+
+            $studyProgressController->store($studyProgressRequest);
+
         }
         else
         {
+            $bookStudent = BookStudent::where('student_id', $student_id)
+            ->where('version_id',$folder->version_id)
+            ->first();
+            $bookStudent->percentage_finished=100;
+            $bookStudent->save();
             $this->autochangetheBook($student_id);
         }
+        $student->save();
+
     }
-    public function    autochangetheBook($student_id){
+    public function   autochangetheBook($student_id){
         $student =Student::find($student_id);
         $folder =$student->currentFolder;
         $version = $folder->version;
         $book =$version->book;
 
-        if($book->id===1)
+        if($book->id===1 && Book::find(2)->versions->count()==1)
         {
             $nextFolder= $book->versions->flatMap(function ($version) {
                 return $version->folders;
@@ -289,6 +305,29 @@ class StudyProgressController extends Controller
         } else {
             return response()->json(['error' => 'BookStudent record not found'], 404);
         }
+    }
+
+    public function calculateFolderPercentage(Request $request)
+    {
+        $folder = Folder::find($request->folderid);
+    
+        if (!$folder) {
+            return response()->json(['error' => 'Folder not found'], 404);
+        }
+    
+        $completedPagesCount = 0;
+        $studyProgress = StudyProgress::where('student_id', $request->student_id)
+            ->where('folder_id', $folder->id)
+            ->first();
+    
+        if ($studyProgress) {
+            $completedPagesCount = substr_count($studyProgress->finished, '1');
+        }
+    
+        $totalPages = strlen($studyProgress->finished);
+        $percentage = ($totalPages > 0) ? (100 * $completedPagesCount / $totalPages) : 0;
+    
+        return $percentage;
     }
 
 

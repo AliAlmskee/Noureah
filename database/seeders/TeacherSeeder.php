@@ -19,7 +19,7 @@ class TeacherSeeder extends Seeder
                 'branch_id' => 1,
             ],
             [
-                'name' => 'أ. زاهر علوش',
+                'name' => 'أ. زاهرة علوش',
                 'branch_id' => 1,
             ],
             [

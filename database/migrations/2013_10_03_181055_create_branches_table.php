@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->date('season_start')->nullable();
+            $table->date('season_end')->nullable();
             $table->timestamps();
         });
     }

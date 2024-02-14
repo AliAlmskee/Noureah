@@ -20,28 +20,34 @@ class ExamController extends Controller
     public function index(Request $request)
     {
         $status = $request->query('status');
+        $branch_id = $request->query('branch_id');
         $perPage = 15;
-        $exams = Exam::where('status', $status)
-            ->latest()
-            ->paginate($perPage);
-
-        foreach ($exams as $exam) {
-            $exam->student_name =$exam->student->name;
-            $exam->book_name =$exam->book->name;
+    
+        $exams = Exam::where('status', $status);
+    
+        if ($branch_id) {
+            $exams->whereHas('student', function ($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id);
+            });
+        }
+    
+        $exams = $exams->latest()->paginate($perPage);
+        $examsData = $exams->items();
+    
+        foreach ($examsData as $exam) {
+            $exam->student_name = $exam->student->name;
+            $exam->book_name = $exam->book->name;
             $exam->teacher_name = $exam->teacher->name ?? null;
-
+    
             unset($exam->student_id);
             unset($exam->teacher_id);
             unset($exam->book_id);
             unset($exam->created_at);
             unset($exam->updated_at);
         }
-
-        $examsData = $exams->items();
-
+    
         return response()->json($examsData);
     }
-
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -92,9 +98,7 @@ class ExamController extends Controller
         return response()->json($exam);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy(Exam $exam)
     {
         $exam->delete();
@@ -109,12 +113,15 @@ class ExamController extends Controller
 
         $exam = Exam::findOrFail($data['exam_id']);
         $exam->status = 'Approved';
-        $exam->admin_id = auth()->id();
+        $exam->admin_id = auth()->id() ?? null;
         $exam->save();
 
+        $student = Student::find($exam->student_id);
+        $folder =$student->currentFolder;
+        $version =$folder->version;
         $bookStudentRequest = new Request([
             'student_id' => $exam->student_id,
-            'book_id' => $exam->version_id,
+            'version_id' => $version->id,
             'number' => $exam->number,
         ]);
 

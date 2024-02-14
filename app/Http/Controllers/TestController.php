@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Test;
-use App\Models\Student;
-use Illuminate\Http\Request;
 use App\Http\Controllers\StudyProgressController ;
+use App\Models\Branch;
+use App\Models\Student;
+use App\Models\Test;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class TestController extends Controller
@@ -56,7 +57,7 @@ class TestController extends Controller
             'pages' => 'array',
             'emoji_id' =>'nullable|exists:emoji,id',
             'date' => 'date_format:Y-m-d',
-            'massage' =>'nullable|string' ,
+            'message' =>'nullable|string' ,
         ]);
 
         if ($validator->fails()) {
@@ -95,19 +96,19 @@ class TestController extends Controller
             return response()->json(['message' => 'already done!']);
         }
         $test = Test::create($data);
-        if ($request->massage )
-        {
-            $massagecontroller = new MessageController();
-
-            $request = new Request([
-                'test_id' =>  $test->id,
-                'thanks_message' => $request->massage ,
-            ]);
-
-            $response = $massagecontroller->store($request);
-
+        
+        if ($request->message!=null) {
+            $massageController = new MessageController();
+        
+            $messageData = [
+                'test_id' => $test->id,
+                'thanks_message' => $request->message,
+            ];
+        
+            $messageRequest = new Request($messageData);
+        
+            $response = $massageController->store($messageRequest);
         }
-      //  calcConsistnsy($student->branch_id);
         return response()->json($test, 201);
     }
 
@@ -115,25 +116,7 @@ class TestController extends Controller
 
 
 
-    public function update(Request $request, Test $test)
-    {
-        $data = $request->validate([
-            'teacher_id' => 'exists:teachers,id',
-            'student_id' => 'exists:students,id',
-            'folder_id' => 'exists:folders,id',
-            'no_mistakes' => 'integer',
-            'no_pages' => 'integer',
-            'time_in_minutes' => 'integer',
-            'is_special' => 'boolean',
-            'mark' => 'integer',
-            'pages' => 'array',
-            'date' => 'date',
-        ]);
-
-        $test->update($data);
-
-        return response()->json($test);
-    }
+ 
 
     public function destroy(Test $test)
     {
@@ -145,12 +128,12 @@ class TestController extends Controller
     public function testforstudent($id, $folder_id)
     {
         $tests = Test::where('student_id', $id)->where('folder_id', $folder_id)->get();
-
+    
+        $student = Student::find($id);
         foreach ($tests as $test) {
             $test->teacher_name = $test->teacher->name;
             $test->folder_name = $test->folder->name;
-
-
+    
             if ($test->emoji_id) {
                 $test->emojiUrl = $test->emoji->emoji;
                 unset($test->emoji_id);
@@ -162,9 +145,18 @@ class TestController extends Controller
             unset($test->created_at);
             unset($test->updated_at);
         }
-
-
-        return response()->json($tests);
+    
+        $branch = Branch::find($student->branch_id);
+        $season_start = $branch->season_start;
+        $season_end = $branch->season_end;
+    
+        $response = [
+            'tests' => $tests,
+            'season_start' => $season_start,
+            'season_end' => $season_end,
+        ];
+    
+        return response()->json($response);
     }
 
 

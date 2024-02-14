@@ -44,8 +44,9 @@ class Test extends Model
     {
         return $this->belongsTo(Folder::class);
     }
+ 
     public function emoji()
     {
-        return $this->belongsTo(Emoji::class, 'emoji');
+        return $this->belongsTo(Emoji::class);
     }
 }

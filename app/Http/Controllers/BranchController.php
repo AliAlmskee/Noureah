@@ -13,12 +13,23 @@ class BranchController extends Controller
         return response()->json($branches);
     }
 
+        public function show($id)
+    {
+        $branch = Branch::find($id);
 
+        if (!$branch) {
+            return response()->json(['message' => 'Branch not found'], 404);
+        }
+
+        return response()->json($branch);
+    }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required'
+            'name' => 'required',
+            'season_start' => 'required|date',
+            'season_end' => 'required|date|after_or_equal:season_start',
         ]);
 
         $branch = Branch::create($request->all());
@@ -31,11 +42,13 @@ class BranchController extends Controller
     public function update(Request $request, Branch $branch)
     {
         $request->validate([
-            'name' => 'required'
+            'name' => 'string',
+            'season_start' => 'date',
+            'season_end' => 'date|after_or_equal:season_start',
         ]);
-
+    
         $branch->update($request->all());
-
+    
         return response()->json($branch, 200);
     }
 
@@ -47,4 +60,6 @@ class BranchController extends Controller
             'message' => 'Branch deleted successfully.'
         ], 200);
     }
+
+    
 }

@@ -42,12 +42,12 @@ class TeacherController extends Controller
     public function update(Request $request, Teacher $teacher)
     {
         $request->validate([
-            'name' => 'required',
-            'branch_id' => 'required|exists:branches,id'
+            'name' => 'string',
+            'branch_id' => 'exists:branches,id'
         ]);
-
+    
         $teacher->update($request->all());
-
+    
         return response()->json($teacher, 200);
     }
 

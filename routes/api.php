@@ -39,7 +39,6 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::apiResource('books', BookController::class);
     Route::apiResource('versions', VersionController::class);
     Route::apiResource('folders', FolderController::class);
-    Route::apiResource('messages', MessageController::class);
     Route::apiResource('students', StudentController::class);
 
     Route::post('/approveExam',[ExamController::class,'approveExam']);
@@ -63,6 +62,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 });
     Route::apiResource('tests', TestController::class);
     Route::apiResource('exams', ExamController::class);
+    Route::apiResource('messages', MessageController::class);
 
     Route::get('emojis/{branch_id}', 'App\Http\Controllers\EmojiController@getEmojisByBranch');
     Route::get('emojis_photo/{id}', 'App\Http\Controllers\EmojiController@getImage');
@@ -95,9 +95,6 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
 
 
-
-
-
     Route::post('/calculatePercentage',[StudyProgressController::class,'calculatePercentage']);
 
     Route::get('/getidby_key/{key}',[StudentController::class,'getId']);
@@ -113,4 +110,5 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('folder_info/{student_id}',[StudyProgressController::class,'get_start_end_page']);
 
 
-    Route::get('exam_status/{student_id}/{version_id}',[BookStudentController::class,'exam_status']);
+  Route::get('exam_status/{student_id}/{version_id}',[BookStudentController::class,'exam_status']);
+  Route::get('calculateFolderPercentage',[StudyProgressController::class,'calculateFolderPercentage']);

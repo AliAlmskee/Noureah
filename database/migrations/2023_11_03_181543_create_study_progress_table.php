@@ -14,6 +14,8 @@ return new class extends Migration
             $table->foreignId('folder_id')->constrained('folders')->onDelete('cascade');
             $table->binary('finished')->default("\x00");
             $table->timestamps();
+            $table->unique(['student_id', 'folder_id']);
+
         });
     }
 

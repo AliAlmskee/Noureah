@@ -36,5 +36,10 @@ class Student extends Model
     {
         return $this->hasMany(Test::class);
     }
+
+    public function exams()
+    {
+        return $this->hasMany(Exam::class);
+    }
     
 }
